@@ -1,0 +1,21 @@
+Scilab 2024.0.0 (Oct 24 2023, 15:08:37)
+=== Scilab DLL Handling Information ===
+
+link() function details:
+
+call() function details:
+
+Currently linked libraries:
+Error getting library info: libraryinfo: Wrong number of input argument(s): 1 expected.
+
+Scilab installation directory: C:/PROGRA~1/SCILAB~1.0
+Checking for DLLs in: C:/PROGRA~1/SCILAB~1.0/bin
+Found 170 DLL files
+Sample DLLs:
+  C:\PROGRA~1\SCILAB~1.0\bin\zstd.dll
+  C:\PROGRA~1\SCILAB~1.0\bin\zlib1.dll
+  C:\PROGRA~1\SCILAB~1.0\bin\zlib.dll
+  C:\PROGRA~1\SCILAB~1.0\bin\xml.dll
+  C:\PROGRA~1\SCILAB~1.0\bin\windows_tools.dll
+
+=== End of Scilab DLL Information ===

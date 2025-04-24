@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 
 :: --- Configuration: adjust these if needed ---
 set "MINGW_BIN_PATH=C:\msys64\mingw64\bin"
@@ -36,14 +36,24 @@ if not exist "%SCILAB_CLI_EXE%" (
 echo found: "%SCILAB_CLI_EXE%"
 echo.
 
-:: 4) Clean previous artifacts
+:: 4) Show current directory for debugging
+echo Current directory: %CD%
+echo.
+
+:: 5) Generate list of include paths from gcc
+echo Getting gcc system include paths...
+gcc -v -xc -E - < NUL 2>&1 | findstr "^ " > gcc_paths.txt
+type gcc_paths.txt
+echo.
+
+:: 6) Clean previous artifacts
 echo Cleaning previous artifacts...
 del simple_math.o simple_math.dll >nul 2>&1
 echo.
 
-:: 5) Compile the C code
+:: 7) Compile the C code with verbose output
 echo Compiling simple_math.c to object file...
-gcc -c simple_math.c -o simple_math.o -DBUILDING_DLL -Wall
+gcc -v -c simple_math.c -o simple_math.o -DBUILDING_DLL -Wall
 if %errorlevel% neq 0 (
     echo.
     echo ERROR: Failed to compile simple_math.c
@@ -52,9 +62,9 @@ if %errorlevel% neq 0 (
 echo OK.
 echo.
 
-:: 6) Link into DLL
+:: 8) Link into DLL with debug and verbose output - now including Scilab compatibility
 echo Creating simple_math.dll...
-gcc -shared -o simple_math.dll simple_math.o
+gcc -v -shared -o simple_math.dll simple_math.o -Wl,--output-def,simple_math.def -Wl,--out-implib,libsimple_math.a -Wl,--export-all-symbols -Wl,--kill-at
 if %errorlevel% neq 0 (
     echo.
     echo ERROR: Failed to create simple_math.dll
@@ -63,15 +73,22 @@ if %errorlevel% neq 0 (
 echo OK.
 echo.
 
-:: 7) Run the Scilab script
+:: 9) Show DLL exports for debugging
+echo DLL exports:
+dumpbin /exports simple_math.dll 2>nul || objdump -p simple_math.dll | findstr -i "export"
+echo.
+
+:: 10) Run the Scilab script
 echo DLL build successful.
 echo.
 echo === Running Scilab example ===
 echo.
 "%SCILAB_CLI_EXE%" -f run_example.sce -quit
+
+:: Check for Scilab errors properly
 if %errorlevel% neq 0 (
     echo.
-    echo ERROR: Scilab script failed.
+    echo ERROR: Scilab script failed with exit code %errorlevel%.
     goto error
 )
 echo.

@@ -1,0 +1,3 @@
+EXPORTS
+    multiply_doubles @1
+    multiply_doubles_ @2
