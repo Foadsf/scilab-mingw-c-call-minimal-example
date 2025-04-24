@@ -12,7 +12,19 @@
   #define DLL_EXPORT
 #endif
 
-// Declare the function to be exported
+// Ensure C linkage even if included from C++
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// Original function (for regular C usage)
 DLL_EXPORT int multiply_doubles(double input1, double input2, double* output);
+
+// Scilab-compatible function with underscore suffix
+DLL_EXPORT int multiply_doubles_(double *input1, double *input2, double* output);
+
+#ifdef __cplusplus
+} // End extern "C"
+#endif
 
 #endif // SIMPLE_MATH_H

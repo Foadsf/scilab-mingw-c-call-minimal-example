@@ -12,12 +12,22 @@ This repository serves as a concise reference for:
 *   Calling an exported function from the DLL within Scilab using `call()`.
 *   Passing arguments (doubles) and receiving a result (double) between Scilab and C.
 
+## Key Insights
+
+After extensive testing, we discovered these critical requirements for Scilab DLL integration:
+
+1. **Fortran-style Function Names**: Scilab expects function names with underscore suffixes (e.g., `multiply_doubles_`).
+2. **By-Reference Parameters**: Functions should accept parameters as pointers (e.g., `double*`) rather than values.
+3. **Proper Exports**: The `--kill-at` linker flag helps ensure function names are exported without decorations.
+4. **Compatible Call Syntax**: Use the simplified Scilab `call()` function format for reliable integration.
+
 ## Files
 
-*   `simple_math.h`: Header file for the C library, declaring the exported function.
-*   `simple_math.c`: Source file implementing the simple C `multiply_doubles` function.
+*   `simple_math.h`: Header file for the C library, declaring the exported functions.
+*   `simple_math.c`: Source file implementing both the standard C `multiply_doubles` function and the Scilab-compatible `multiply_doubles_` function.
 *   `build_and_run.bat`: Windows batch script to compile the C code into `simple_math.dll` and then run the Scilab example script.
-*   `run_example.sce`: Scilab script that links the `simple_math.dll` and calls the `multiply_doubles` function using `call()`.
+*   `run_example.sce`: Scilab script that links the `simple_math.dll` and calls the `multiply_doubles_` function using `call()`.
+*   `test_dll.c` and `test_dll.bat`: C program and batch script to test the DLL from regular C code.
 *   `README.md`: This file.
 *   `.gitignore`: Excludes build artifacts.
 
@@ -52,14 +62,70 @@ DLL build successful.
 Running Scilab script...
  Scilab 2024.0.0 (Oct 24 2023, 15:08:37)
 Attempting to link DLL: C:\path\to\your\repo\simple_math.dll
-DLL linked successfully with ID: <some_number>
-Calling C function 'multiply_doubles'...
-C function returned: 42.000000
-Unlinking library ID: <some_number>
+Linking with explicit function name: multiply_doubles_...
+Link result: 0
+DLL linked successfully with ID: 0
+Calling C function 'multiply_doubles_'...
+Calling with parameters: in1=7.000000, in2=6.000000
+Scilab function called: 7.00 * 6.00
+Scilab function result: 42.00
+C function call successful.
+Value returned: 42.000000
+Attempting to unlink library ID: 0
 Unlinked successfully.
+Example completed successfully.
 ---
-Scilab script finished.
+Scilab script finished successfully.
 ```
+
+## DLL Function Implementation Details
+
+To make a C function callable from Scilab, implement two versions:
+
+1. Standard C version (for regular C programs):
+```c
+DLL_EXPORT int multiply_doubles(double input1, double input2, double* output) {
+    *output = input1 * input2;
+    return 0; // Success
+}
+```
+
+2. Scilab-compatible version (with underscore suffix and by-reference parameters):
+```c
+DLL_EXPORT int multiply_doubles_(double *input1, double *input2, double* output) {
+    *output = (*input1) * (*input2);
+    return 0; // Success
+}
+```
+
+## Calling from Scilab
+
+Use this pattern to call the DLL function from Scilab:
+
+```scilab
+// Link the DLL with explicit function name
+ilib = link(dll_path, ["multiply_doubles_"], "c");
+
+// Call the function
+result = call("multiply_doubles_", 
+             value1, 1, "d",           // Input 1: double
+             value2, 2, "d",           // Input 2: double
+             initial_result, 3, "d",   // Input/Output: double
+             "out", [1,1], 3, "d",     // Output is at position 3, a 1x1 double
+             ilib);                    // Library ID
+
+// Unlink when done
+ulink(ilib);
+```
+
+## Troubleshooting
+
+If you encounter issues:
+
+1. **Check DLL Exports**: Use `nm simple_math.dll | findstr multiply` to verify function exports.
+2. **Verify Function Names**: Ensure Scilab-compatible functions have underscore suffixes.
+3. **Linking Issues**: Explicitly specify function names in the `link()` call.
+4. **Call Parameter Format**: Follow the exact format shown above for the `call()` function.
 
 ## License
 
@@ -67,5 +133,5 @@ This repository and its contents are provided under the [Creative Commons Attrib
 
 ## Author
 
-Foad S. Farimani (f.s.farimani@gmail.com)
+Foad S. Farimani (f.s.farimani@gmail.com)  
 Based on concepts explored during debugging of Scilab toolbox builds referencing Spoken Tutorials by IIT Bombay.
