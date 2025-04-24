@@ -3,6 +3,11 @@
 *.obj
 *.dll
 *.exe
+*.a
+libsimple_math.a
+
+# Generated files
+gcc_paths.txt
 
 # Operating System Files
 .DS_Store
